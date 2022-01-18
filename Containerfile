@@ -7,27 +7,18 @@ FROM docker.io/jboss/base-jdk:11
 MAINTAINER Your Name 'your@email.com`
 
 # set environment variables for the jboss home dir and wildfly version
-ENV JBOSS_HOME /opt/jboss/wildfly
+ENV JBOSS_HOME /opt/jboss/wildfly 
 ENV WILDFLY_VERSION 26.0.0.Final
 
 # in the container
 # change to the root user
 USER root
 
-# set the working directory for the following instructions
-WORKDIR $HOME
+# add and decompress the tar to the default working directory /opt/jboss
+ADD wildfly-${WILDFLY_VERSION}.tar.gz .
 
-# static copy the downloaded WildFly server in your local directory to the containers working directory
-COPY wildfly-$WILDFLY_VERSION.tar.gz .
-
-# in a single RUN layer, extract the contents of the tar WildFly in /opt
-RUN tar xf wildfly-$WILDFLY_VERSION.tar.gz \
-
-  # move the WildFly install to /opt/jboss/wildfly
-   && mv wildfly-$WILDFLY_VERSION $JBOSS_HOME \ 
-
-  # remove the WildFly tar distro
-   && rm wildfly-$WILDFLY_VERSION.tar.gz \
+# move the WildFly install to /opt/jboss/wildfly
+RUN mv wildfly-$WILDFLY_VERSION ${JBOSS_HOME} \ 
 
   # change the ownership of /opt/jboss/wildfly to jboss
    && chown -R jboss:0 ${JBOSS_HOME} \
@@ -42,7 +33,7 @@ ENV LAUNCH_JBOSS_IN_BACKGROUND true
 USER jboss
 
 # set the working directory to jboss home for the following instructions and container launch
-WORKDIR $JBOSS_HOME
+WORKDIR ${JBOSS_HOME}
 
 # use the WildFly script (relative from the working dir) to create an admin user to access the admin console
 RUN ./bin/add-user.sh admin Admin#70365 --silent
@@ -51,4 +42,4 @@ RUN ./bin/add-user.sh admin Admin#70365 --silent
 EXPOSE 8080 9990
 
 # use WildFly script to boot in standalone mode and bind all interfaces
-CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
+CMD ["./bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
