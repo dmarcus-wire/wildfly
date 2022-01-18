@@ -4,30 +4,34 @@
 FROM docker.io/jboss/base-jdk:11
 
 # set who will maintain this container image
-MAINTAINER Your Name 'your@email.com`
+MAINTAINER Your Name 'your@email.com'
 
 # set environment variables for the jboss home dir and wildfly version
-ENV JBOSS_HOME /opt/jboss/wildfly 
-ENV WILDFLY_VERSION 26.0.0.Final
+ENV JBOSS_HOME="/opt/jboss/wildfly" \
+WILDFLY_VERSION="26.0.0.Final" \
+WILDFLY_SRC="https://github.com/wildfly/wildfly/releases/download/26.0.0.Final/wildfly-26.0.0.Final.tar.gz" \
+LAUNCH_JBOSS_IN_BACKGROUND="true"
 
-# in the container
-# change to the root user
+# switch to root user
 USER root
 
 # add and decompress the tar to the default working directory /opt/jboss
-ADD wildfly-${WILDFLY_VERSION}.tar.gz .
+ADD ${WILDFLY_SRC} .
 
 # move the WildFly install to /opt/jboss/wildfly
-RUN mv wildfly-$WILDFLY_VERSION ${JBOSS_HOME} \ 
+RUN tar xf wildfly-$WILDFLY_VERSION.tar.gz \
+  
+  # move the tar file from /opt/jboss to /opt/jboss/wildfly 
+   && mv wildfly-$WILDFLY_VERSION ${JBOSS_HOME} \ 
+
+  # remove the tar file to reclaim space
+   && rm wildfly-$WILDFLY_VERSION.tar.gz \
 
   # change the ownership of /opt/jboss/wildfly to jboss
    && chown -R jboss:0 ${JBOSS_HOME} \
         
   # change the permissions to /opt/jboss/wildfly
    && chmod -R g+rw ${JBOSS_HOME}
-
-# ensure signals are forwarded to the JVM process for graceful shutdown
-ENV LAUNCH_JBOSS_IN_BACKGROUND true
 
 # change to jboss user
 USER jboss
